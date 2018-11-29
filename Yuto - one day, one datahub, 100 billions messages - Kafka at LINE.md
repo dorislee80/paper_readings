@@ -35,8 +35,19 @@ MappedByteBuffer本身是驻留在JVM的heap中的，其生命周期由JVM的GC�
 当你关闭该MBB对应的RandomAccessFile和FileChannel，取消所有指向这个MBB对象的引用时，该MBB管理的这块内存仍然有效。只有当GC回收MBB对象时，
 一个cleaner才会被触发，从而调用munmap()释放这块内存。
 
-在开发时，如果没有注意到这个设计带来的微妙影响，程序会产生意想不到的bug。
+Kafka有一个log clean thread，它的一个动作是删除过期的segment以及对应的offset index文件。让我们看看删除offset index文件时发生了什么：
+* 让程序内部的对象不再引用对应的MappedByteBuffer对象了（但这并不意味着该MBB会被马上GC）
+* 删除文件
+* 操作系统会将该文件对应的数据结构的引用计数减一。但由于MBB没有被GC，所以其内存映射仍然有效，所以此时的引用计数为一（而非零）
 
-### Bug1 - File Access Issue
+一会儿以后，GC开始工作了：
+* 回收上述的MBB对象
+* 这导致munmap被调用，从而使得该文件的引用计数变为0
+* 引用技术变为0，使得VFS调用实际的文件系统代码来删除磁盘文件
+* 这个删除的过程会产生磁盘读（比如读入inode），从而使得GC的STW过程异常的漫长（一般情况下，GC只涉及内存操作，比较快）
 
-### Bug2 - Unpredictable STW Latency
+## 解决方案
+
+解决方案很简单，但不需要一个MappedByteBuffer时，显示调用（而非被动等待GC触发）清理函数
+
+mbb.asInstanceOf[sun.nio.ch.DirectBuffer].cleaner().clean()

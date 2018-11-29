@@ -37,8 +37,6 @@ MappedByteBuffer本身是驻留在JVM的heap中的，其生命周期由JVM的GC�
 
 在开发时，如果没有注意到这个设计带来的微妙影响，程序会产生意想不到的bug。
 
-### Bug1 - off-heap OOM
+### Bug1 - File Access Issue
 
-### Bug2 - File Access Issue
-
-### Bug3 - Unpredictable STW Latency
+### Bug2 - Unpredictable STW Latency

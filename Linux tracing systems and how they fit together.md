@@ -11,11 +11,11 @@ Linux下有令人眼花缭乱的多个tracing工具，这篇文章把这些工�
 * collecting mechanisms - how to collect data from the data sources
 * tracing frontends - the tool you actually interact with to analyse data.
 
-![big_picture](/images/tracing_big_picture.png)
+![big_picture](/images/tracing_big_picture.PNG)
 
 ## Data sources
 
-![data_sources](/images/tracing_data_sources.png)
+![data_sources](/images/tracing_data_sources.PNG)
 
 上图总结了Linux常见的tracing数据源。这些数据源主要覆盖系统调用（system calls），内核函数调用(Linux kernel function calls），应用
 程序函数调用(userspace function calls），以及一些自定义事件。
